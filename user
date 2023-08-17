@@ -5,14 +5,13 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     @column(name="User_name")
     private String username;
     @column(name="email")
     private String email;
-    @column(name="first_name")
-    private String firstName;
-    @column(name="last_name")
-    private String lastName;
+    @column(name="password")
+    private String password;
 }
 
 @RestController
