@@ -4,7 +4,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 @Entity
-public class User {
+@Table(name="login")
+public class Login {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -27,14 +28,8 @@ public class AuthController {
         this.userService = userService;
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<String> registerUser(@RequestBody RegistrationRequest request) {
-        userService.createUser(request.getUsername(), request.getPassword());
-        return ResponseEntity.ok("User registered successfully");
-    }
-
     @PostMapping("/login")
-    public ResponseEntity<String> loginUser(@RequestBody LoginRequest request) {
+    public ResponseEntity<String> loginUser(@RequestBody Login request) {
         boolean isAuthenticated = userService.authenticate(request.getUsername(), request.getPassword());
         if (isAuthenticated) {
             return ResponseEntity.ok("Login successful");
@@ -47,24 +42,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-public class UserService {
+public class LoginService {
     private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, BCryptPasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
+    public LoginService(LoginRepository LoginRepository, BCryptPasswordEncoder passwordEncoder) {
+        this.LoginRepository = LoginRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User createUser(String username, String password) {
-        User user = new User();
-        user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
-        return userRepository.save(user);
-    }
-
     public boolean authenticate(String username, String password) {
-        User user = userRepository.findByUsername(username);
+        Login user = LoginRepository.findByUsername(username);
         if (user != null) {
             return passwordEncoder.matches(password, user.getPassword());
         }
@@ -74,7 +62,7 @@ public class UserService {
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface LoginRepository extends JpaRepository<User, Long> {
     User findByUsername(String username);
 }
 
@@ -93,7 +81,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
             .authorizeRequests()
-            .antMatchers("/register", "/login").permitAll()
+            .antMatchers("/login").permitAll()
             .anyRequest().authenticated();
     }
 
