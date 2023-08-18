@@ -1,0 +1,75 @@
+
+@Entity
+@Table(name = "admins")
+@Data
+public class Admin {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "username", unique = true)
+    private String username;
+
+    @Column(name = "password")
+    private String password;
+}
+
+public interface AdminRepository extends JpaRepository<Admin, Long> {
+}
+
+@RestController
+@RequestMapping("/admin")
+public class AdminController {
+    private final AdminService adminService;
+
+    public AdminController(AdminService adminService) {
+        this.adminService = adminService;
+    }
+
+    @PostMapping
+    public ResponseEntity<Admin> createAdmin(@RequestBody Admin admin) {
+        Admin savedAdmin = adminService.saveAdmin(admin);
+        return ResponseEntity.ok(savedAdmin);
+    }
+
+    @PutMapping("/{adminId}")
+    public ResponseEntity<Admin> updateAdmin(@PathVariable Long adminId, @RequestBody Admin admin) {
+        admin.setId(adminId);
+        Admin updatedAdmin = adminService.updateAdmin(admin);
+        return ResponseEntity.ok(updatedAdmin);
+    }
+
+    @DeleteMapping("/{adminId}")
+    public ResponseEntity<Void> deleteAdmin(@PathVariable Long adminId) {
+        adminService.deleteAdmin(adminId);
+        return ResponseEntity.noContent().build();
+    }
+
+}
+@Service
+public class AdminService {
+    private final AdminRepository adminRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+
+    public AdminService(AdminRepository adminRepository, BCryptPasswordEncoder passwordEncoder) {
+        this.adminRepository = adminRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    public Admin saveAdmin(Admin admin) {
+        String encodedPassword = passwordEncoder.encode(admin.getPassword());
+        admin.setPassword(encodedPassword);
+        return adminRepository.save(admin);
+    }
+
+    public Admin updateAdmin(Admin admin) {
+        return adminRepository.save(admin);
+    }
+
+    public void deleteAdmin(Long adminId) {
+        adminRepository.deleteById(adminId);
+    }
+}
+
+}
+}
