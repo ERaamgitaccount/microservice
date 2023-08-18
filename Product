@@ -1,0 +1,56 @@
+@Entity
+@Table(name = "products")
+public class Product {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "product_name")
+    private String productName;
+
+    @Column(name = "user_id")
+    private User user;
+
+    @Column(name = "admin_id")
+    private Admin admin;
+}
+
+@Repository
+public interface ProductRepository extends JpaRepository<Product, Long> {   
+}
+
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+    private final ProductService productService;
+    private final RestTemplate restTemplate;
+
+    public ProductController(ProductService productService, RestTemplate restTemplate) {
+        this.productService = productService;
+        this.restTemplate = restTemplate;
+    }
+
+    @PostMapping
+    public ResponseEntity<Product> createProduct(@RequestBody Product product) {
+      
+        User user = restTemplate.getForObject("http://user-service/users/{id}", User.class, product.getUser().getId());
+        Admin admin = restTemplate.getForObject("http://admin-service/admins/{id}", Admin.class, product.getAdmin().getId());
+        Login login = restTemplate.getForObject("http://login-service/logins/{id}", Login.class, product.getLogin().getId());
+
+        if (user == null || admin == null || login == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Product createdProduct = productService.createProduct(product);
+        return ResponseEntity.ok(createdProduct);
+    }
+
+
+@Service
+public class ProductService {
+@Autowired
+    private final ProductRepository productRepository;
+
+public Product createProduct(product) {
+       return productRepository.save(product);
+}
+}
